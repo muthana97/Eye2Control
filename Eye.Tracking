@@ -1,0 +1,41 @@
+#EYE TRACKING CODE
+
+import cv2
+import numpy as np
+
+# Capture video stream from camera
+cap = cv2.VideoCapture(0)
+
+while True:
+    # Read frames from video stream
+    ret, frame = cap.read()
+
+    # Convert captured frame to grayscale
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    # Apply Gaussian blur to reduce noise
+    gray_blur = cv2.GaussianBlur(gray, (5, 5), 0)
+
+    # Apply threshold to segment pupil from rest of image
+    _, threshold = cv2.threshold(gray_blur, 50, 255, cv2.THRESH_BINARY_INV)
+
+    # Find contours in thresholded image
+    contours, _ = cv2.findContours(threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Filter contours to keep only ones likely to be pupil
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area > 100 and area < 1000:
+            x, y, w, h = cv2.boundingRect(contour)
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+    # Display resulting frame
+    cv2.imshow("Eyeball Tracking", frame)
+
+    # Wait for key press, break loop if 'q' is pressed
+    if cv2.waitKey(1) == ord('q'):
+        break
+
+# Release video capture and close window
+cap.release()
+cv2.destroyAllWindows()
